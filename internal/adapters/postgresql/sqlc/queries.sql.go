@@ -9,6 +9,22 @@ import (
 	"context"
 )
 
+const addProduct = `-- name: AddProduct :exec
+INSERT INTO products (name, price,quantity) 
+VALUES ($1, $2, $3)
+`
+
+type AddProductParams struct {
+	Name     string `json:"name"`
+	Price    int32  `json:"price"`
+	Quantity int32  `json:"quantity"`
+}
+
+func (q *Queries) AddProduct(ctx context.Context, arg AddProductParams) error {
+	_, err := q.db.Exec(ctx, addProduct, arg.Name, arg.Price, arg.Quantity)
+	return err
+}
+
 const listProducts = `-- name: ListProducts :many
 SELECT id, name, price, quantity, created_at FROM products
 `

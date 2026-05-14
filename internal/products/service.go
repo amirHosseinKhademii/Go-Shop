@@ -8,6 +8,7 @@ import (
 type Service interface {
 	ListProducts(ctx context.Context) ([]repository.Product, error)
 	GetProductById(ctx context.Context, id int32) (repository.Product, error)
+	AddProduct(ctx context.Context, name string, price int32, quantity int32) error
 }
 
 type svc struct {
@@ -19,10 +20,18 @@ func NewService(repository repository.Querier) Service {
 	return &svc{repository}
 }
 
-func (svc *svc) ListProducts(ctx context.Context) ([]repository.Product, error) {
-	return svc.repository.ListProducts(ctx)
+func (s *svc) ListProducts(ctx context.Context) ([]repository.Product, error) {
+	return s.repository.ListProducts(ctx)
 }
 
-func (svc *svc) GetProductById(ctx context.Context, id int32) (repository.Product, error) {
-	return svc.repository.ProductById(ctx, id)
+func (s *svc) GetProductById(ctx context.Context, id int32) (repository.Product, error) {
+	return s.repository.ProductById(ctx, id)
+}
+
+func (s *svc) AddProduct(ctx context.Context, name string, price int32, quantity int32) error {
+	return s.repository.AddProduct(ctx, repository.AddProductParams{
+		Name:     name,
+		Price:    price,
+		Quantity: quantity,
+	})
 }
