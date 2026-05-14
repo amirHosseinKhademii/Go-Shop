@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	AddProduct(ctx context.Context, arg AddProductParams) error
+	DeleteProduct(ctx context.Context, id int32) error
 	ListProducts(ctx context.Context) ([]Product, error)
 	ProductById(ctx context.Context, id int32) (Product, error)
 }

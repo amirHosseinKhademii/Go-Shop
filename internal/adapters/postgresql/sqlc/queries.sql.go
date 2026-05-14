@@ -10,7 +10,7 @@ import (
 )
 
 const addProduct = `-- name: AddProduct :exec
-INSERT INTO products (name, price,quantity) 
+INSERT INTO products (name, price, quantity) 
 VALUES ($1, $2, $3)
 `
 
@@ -22,6 +22,15 @@ type AddProductParams struct {
 
 func (q *Queries) AddProduct(ctx context.Context, arg AddProductParams) error {
 	_, err := q.db.Exec(ctx, addProduct, arg.Name, arg.Price, arg.Quantity)
+	return err
+}
+
+const deleteProduct = `-- name: DeleteProduct :exec
+DELETE FROM products WHERE id = $1
+`
+
+func (q *Queries) DeleteProduct(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteProduct, id)
 	return err
 }
 

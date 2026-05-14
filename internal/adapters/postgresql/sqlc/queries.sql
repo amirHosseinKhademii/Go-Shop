@@ -8,3 +8,6 @@ SELECT * FROM products
 -- name: AddProduct :exec
 INSERT INTO products (name, price, quantity) 
 VALUES ($1, $2, $3);
+
+-- name: DeleteProduct :exec
+DELETE FROM products WHERE id = $1;
