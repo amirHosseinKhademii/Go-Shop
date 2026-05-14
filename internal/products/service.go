@@ -13,10 +13,11 @@ type svc struct {
 	repository repository.Querier
 }
 
+// Constructor
 func NewService(repository repository.Querier) Service {
 	return &svc{repository}
 }
 
-func (s *svc) ListProducts(ctx context.Context) ([]repository.Product, error) {
-	return s.repository.ListProducts(ctx)
+func (svc *svc) ListProducts(ctx context.Context) ([]repository.Product, error) {
+	return svc.repository.ListProducts(ctx)
 }
