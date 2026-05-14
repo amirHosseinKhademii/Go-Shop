@@ -11,3 +11,8 @@ VALUES ($1, $2, $3);
 
 -- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1;
+
+-- name: UpdateProduct :exec
+UPDATE products
+SET name = $2, price = $3, quantity = $4
+WHERE id = $1;

@@ -116,3 +116,70 @@ func fieldErrorMessage(fe validator.FieldError) string {
 		return fe.Field() + " is invalid"
 	}
 }
+
+func (h *handler) DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
+	param := chi.URLParam(r, "id")
+	parsedId, err := strconv.ParseInt(param, 10, 32)
+	if err != nil {
+		jsonUtil.Write(w, http.StatusBadRequest, map[string]string{"error": "invalid product ID"})
+		return
+	}
+	id := int32(parsedId)
+
+	err = h.service.DeleteProduct(r.Context(), id)
+	if err != nil {
+		log.Print(err)
+		jsonUtil.Write(w, http.StatusInternalServerError, map[string]string{"error": "failed to delete product"})
+		return
+	}
+	jsonUtil.Write(w, http.StatusOK, map[string]string{"message": "product deleted successfully"})
+}
+
+// UpdateProductRequest represents the validated request body for updating a product
+type UpdateProductRequest struct {
+	Name     string `json:"name" validate:"required,min=1,max=255"`
+	Price    int32  `json:"price" validate:"required,gt=0"`
+	Quantity int32  `json:"quantity" validate:"required,gte=0"`
+}
+
+func (h *handler) UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
+	param := chi.URLParam(r, "id")
+	parsedId, err := strconv.ParseInt(param, 10, 32)
+	if err != nil {
+		jsonUtil.Write(w, http.StatusBadRequest, map[string]string{"error": "invalid product ID"})
+		return
+	}
+	id := int32(parsedId)
+
+	var req UpdateProductRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonUtil.Write(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON body"})
+		return
+	}
+
+	// Validate the request body
+	if err := validate.Struct(req); err != nil {
+		var validationErrors ValidationErrors
+		for _, err := range err.(validator.ValidationErrors) {
+			validationErrors.Errors = append(validationErrors.Errors, ValidationError{
+				Field:   err.Field(),
+				Message: fieldErrorMessage(err),
+			})
+		}
+		jsonUtil.Write(w, http.StatusUnprocessableEntity, validationErrors)
+		return
+	}
+
+	err = h.service.UpdateProduct(r.Context(), id, req.Name, req.Price, req.Quantity)
+	if err != nil {
+		log.Print(err)
+		jsonUtil.Write(w, http.StatusInternalServerError, map[string]string{"error": "failed to update product"})
+		return
+	}
+	jsonUtil.Write(w, http.StatusOK, repository.UpdateProductParams{
+		ID:       id,
+		Name:     req.Name,
+		Price:    req.Price,
+		Quantity: req.Quantity,
+	})
+}

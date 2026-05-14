@@ -13,6 +13,7 @@ type Querier interface {
 	DeleteProduct(ctx context.Context, id int32) error
 	ListProducts(ctx context.Context) ([]Product, error)
 	ProductById(ctx context.Context, id int32) (Product, error)
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 }
 
 var _ Querier = (*Queries)(nil)

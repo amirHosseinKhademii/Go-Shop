@@ -37,6 +37,8 @@ func (app *application) mount() http.Handler {
 	r.Get("/products", productsHandler.ListProductHandler)
 	r.Get("/products/{id}", productsHandler.GetProductById)
 	r.Post("/products", productsHandler.AddProductHandler)
+	r.Put("/products/{id}", productsHandler.UpdateProductHandler)
+	r.Delete("/products/{id}", productsHandler.DeleteProductHandler)
 
 	return r
 }
