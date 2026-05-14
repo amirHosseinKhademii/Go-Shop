@@ -18,17 +18,13 @@ func NewHandler(svc Service) *handler {
 }
 
 func (h *handler) ListProductHandler(w http.ResponseWriter, r *http.Request) {
-	err := h.service.ListProducts(r.Context())
+	products, err := h.service.ListProducts(r.Context())
 
 	if err != nil {
 		log.Print(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	products := struct {
-		Products []string `json:prodcuts`
-	}{}
 
 	json.Write(w, http.StatusOK, products)
 

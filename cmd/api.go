@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+	repository "shop/internal/adapters/postgresql/sqlc"
 	"shop/internal/products"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // mount
@@ -29,7 +31,7 @@ func (app *application) mount() http.Handler {
 		w.Write([]byte("Ok"))
 	})
 
-	productsService := products.NewService()
+	productsService := products.NewService(repository.New(app.pool))
 	productsHandler := products.NewHandler(productsService)
 
 	r.Get("/products", productsHandler.ListProductHandler)
@@ -51,6 +53,7 @@ func (app *application) run(h http.Handler) error {
 
 type application struct {
 	config config
+	pool   *pgxpool.Pool
 }
 
 type config struct {

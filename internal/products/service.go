@@ -1,18 +1,22 @@
 package products
 
-import "context"
+import (
+	"context"
+	repository "shop/internal/adapters/postgresql/sqlc"
+)
 
 type Service interface {
-	ListProducts(ctx context.Context) error
+	ListProducts(ctx context.Context) ([]repository.Product, error)
 }
 
 type svc struct {
+	repository repository.Querier
 }
 
-func NewService() Service {
-	return &svc{}
+func NewService(repository repository.Querier) Service {
+	return &svc{repository}
 }
 
-func (s *svc) ListProducts(ctx context.Context) error {
-	return nil
+func (s *svc) ListProducts(ctx context.Context) ([]repository.Product, error) {
+	return s.repository.ListProducts(ctx)
 }
