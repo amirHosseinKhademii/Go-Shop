@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"shop/internal/products"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -28,29 +29,10 @@ func (app *application) mount() http.Handler {
 		w.Write([]byte("Ok"))
 	})
 
-	// RESTy routes for "articles" resource
-	// r.Route("/articles", func(r chi.Router) {
-	// 	r.With(paginate).Get("/", listArticles)                           // GET /articles
-	// 	r.With(paginate).Get("/{month}-{day}-{year}", listArticlesByDate) // GET /articles/01-16-2017
+	productsService := products.NewService()
+	productsHandler := products.NewHandler(productsService)
 
-	// 	r.Post("/", createArticle)       // POST /articles
-	// 	r.Get("/search", searchArticles) // GET /articles/search
-
-	// 	// Regexp url parameters:
-	// 	r.Get("/{articleSlug:[a-z-]+}", getArticleBySlug) // GET /articles/home-is-toronto
-
-	// 	// Subrouters:
-	// 	r.Route("/{articleID}", func(r chi.Router) {
-	// 		r.Use(ArticleCtx)
-	// 		r.Get("/", getArticle)       // GET /articles/123
-	// 		r.Put("/", updateArticle)    // PUT /articles/123
-	// 		r.Delete("/", deleteArticle) // DELETE /articles/123
-	// 	})
-	// })
-
-	// Mount the admin sub-router
-	//r.Mount("/admin", adminRouter())
-	// http.ListenAndServe(":3333", r)
+	r.Get("/products", productsHandler.ListProductHandler)
 
 	return r
 }
