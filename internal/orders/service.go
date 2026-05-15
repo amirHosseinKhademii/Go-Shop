@@ -82,6 +82,16 @@ func (s *svc) CreateOrder(ctx context.Context, req CreateOrderRequest) error {
 		if err != nil {
 			return err
 		}
+
+		// update product quantity
+		newQuantity := product.Quantity - item.Quantity
+		err = qtx.UpdateProductQuantity(ctx, repository.UpdateProductQuantityParams{
+			ID:       item.ProductID,
+			Quantity: newQuantity,
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit(ctx)

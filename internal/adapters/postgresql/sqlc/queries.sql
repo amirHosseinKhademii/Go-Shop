@@ -17,6 +17,11 @@ UPDATE products
 SET name = $2, price = $3, quantity = $4
 WHERE id = $1;
 
+-- name: UpdateProductQuantity :exec
+UPDATE products
+SET quantity = $2
+WHERE id = $1;
+
 -- name: CreateOrder :one
 INSERT INTO "order_new" (customer_id, created_at, updated_at)
 VALUES ($1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
