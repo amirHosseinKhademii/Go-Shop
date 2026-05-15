@@ -183,3 +183,5 @@ func (h *handler) UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 		Quantity: req.Quantity,
 	})
 }
+
+
