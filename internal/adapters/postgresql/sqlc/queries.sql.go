@@ -7,7 +7,42 @@ package repository
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const addOrderItem = `-- name: AddOrderItem :one
+INSERT INTO "order_items_new" (order_id, product_id, quantity, price, created_at, updated_at)
+VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+RETURNING id, order_id, product_id, quantity, price, created_at, updated_at
+`
+
+type AddOrderItemParams struct {
+	OrderID   int32 `json:"order_id"`
+	ProductID int32 `json:"product_id"`
+	Quantity  int32 `json:"quantity"`
+	Price     int32 `json:"price"`
+}
+
+func (q *Queries) AddOrderItem(ctx context.Context, arg AddOrderItemParams) (OrderItemsNew, error) {
+	row := q.db.QueryRow(ctx, addOrderItem,
+		arg.OrderID,
+		arg.ProductID,
+		arg.Quantity,
+		arg.Price,
+	)
+	var i OrderItemsNew
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.ProductID,
+		&i.Quantity,
+		&i.Price,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const addProduct = `-- name: AddProduct :exec
 INSERT INTO products (name, price, quantity) 
@@ -25,6 +60,57 @@ func (q *Queries) AddProduct(ctx context.Context, arg AddProductParams) error {
 	return err
 }
 
+const createOrder = `-- name: CreateOrder :one
+INSERT INTO "order_new" (customer_id, created_at, updated_at)
+VALUES ($1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+RETURNING id, customer_id, created_at, updated_at
+`
+
+func (q *Queries) CreateOrder(ctx context.Context, customerID int32) (OrderNew, error) {
+	row := q.db.QueryRow(ctx, createOrder, customerID)
+	var i OrderNew
+	err := row.Scan(
+		&i.ID,
+		&i.CustomerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createOrderItem = `-- name: CreateOrderItem :one
+INSERT INTO "order_items_new" (order_id, product_id, quantity, price, created_at, updated_at)
+VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+RETURNING id, order_id, product_id, quantity, price, created_at, updated_at
+`
+
+type CreateOrderItemParams struct {
+	OrderID   int32 `json:"order_id"`
+	ProductID int32 `json:"product_id"`
+	Quantity  int32 `json:"quantity"`
+	Price     int32 `json:"price"`
+}
+
+func (q *Queries) CreateOrderItem(ctx context.Context, arg CreateOrderItemParams) (OrderItemsNew, error) {
+	row := q.db.QueryRow(ctx, createOrderItem,
+		arg.OrderID,
+		arg.ProductID,
+		arg.Quantity,
+		arg.Price,
+	)
+	var i OrderItemsNew
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.ProductID,
+		&i.Quantity,
+		&i.Price,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deleteProduct = `-- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1
 `
@@ -32,6 +118,96 @@ DELETE FROM products WHERE id = $1
 func (q *Queries) DeleteProduct(ctx context.Context, id int32) error {
 	_, err := q.db.Exec(ctx, deleteProduct, id)
 	return err
+}
+
+const getOrderById = `-- name: GetOrderById :one
+SELECT o.id, o.customer_id, o.created_at, o.updated_at,
+       oi.id AS order_item_id, oi.product_id, oi.quantity, oi.price, oi.created_at AS order_item_created_at, oi.updated_at AS order_item_updated_at
+FROM "order_new" o
+LEFT JOIN "order_items_new" oi ON o.id = oi.order_id
+WHERE o.id = $1
+`
+
+type GetOrderByIdRow struct {
+	ID                 int32              `json:"id"`
+	CustomerID         int32              `json:"customer_id"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	OrderItemID        pgtype.Int4        `json:"order_item_id"`
+	ProductID          pgtype.Int4        `json:"product_id"`
+	Quantity           pgtype.Int4        `json:"quantity"`
+	Price              pgtype.Int4        `json:"price"`
+	OrderItemCreatedAt pgtype.Timestamptz `json:"order_item_created_at"`
+	OrderItemUpdatedAt pgtype.Timestamptz `json:"order_item_updated_at"`
+}
+
+func (q *Queries) GetOrderById(ctx context.Context, id int32) (GetOrderByIdRow, error) {
+	row := q.db.QueryRow(ctx, getOrderById, id)
+	var i GetOrderByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.CustomerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OrderItemID,
+		&i.ProductID,
+		&i.Quantity,
+		&i.Price,
+		&i.OrderItemCreatedAt,
+		&i.OrderItemUpdatedAt,
+	)
+	return i, err
+}
+
+const listOrders = `-- name: ListOrders :many
+SELECT o.id, o.customer_id, o.created_at, o.updated_at,
+       oi.id AS order_item_id, oi.product_id, oi.quantity, oi.price, oi.created_at AS order_item_created_at, oi.updated_at AS order_item_updated_at
+FROM "order_new" o
+LEFT JOIN "order_items_new" oi ON o.id = oi.order_id
+`
+
+type ListOrdersRow struct {
+	ID                 int32              `json:"id"`
+	CustomerID         int32              `json:"customer_id"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	OrderItemID        pgtype.Int4        `json:"order_item_id"`
+	ProductID          pgtype.Int4        `json:"product_id"`
+	Quantity           pgtype.Int4        `json:"quantity"`
+	Price              pgtype.Int4        `json:"price"`
+	OrderItemCreatedAt pgtype.Timestamptz `json:"order_item_created_at"`
+	OrderItemUpdatedAt pgtype.Timestamptz `json:"order_item_updated_at"`
+}
+
+func (q *Queries) ListOrders(ctx context.Context) ([]ListOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listOrders)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrdersRow
+	for rows.Next() {
+		var i ListOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CustomerID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.OrderItemID,
+			&i.ProductID,
+			&i.Quantity,
+			&i.Price,
+			&i.OrderItemCreatedAt,
+			&i.OrderItemUpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listProducts = `-- name: ListProducts :many

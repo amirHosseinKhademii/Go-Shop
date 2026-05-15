@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	repository "shop/internal/adapters/postgresql/sqlc"
+	"shop/internal/orders"
 	"shop/internal/products"
 	"time"
 
@@ -40,6 +41,11 @@ func (app *application) mount() http.Handler {
 	r.Put("/products/{id}", productsHandler.UpdateProductHandler)
 	r.Delete("/products/{id}", productsHandler.DeleteProductHandler)
 
+	ordersService := orders.NewService(repository.New(app.pool), app.pool)
+	ordersHandler := orders.NewHandler(ordersService)
+
+	r.Get("/orders", ordersHandler.GetOrdersHandler)
+	r.Post("/orders", ordersHandler.CreateOrderHandler)
 	return r
 }
 
